@@ -15,35 +15,15 @@ Utilize the  FPGA on the Xilinx Pynqboard to detect and draw a dynamic outline a
 
 **Data Collection:**
 1. Determine the data we will use for training. This will most likely be a collection of in-game screenshots either showing enemy player models or "neutral" (no enemy).
-2. Devise a method of pre-processing the data (cropped to certain resolution? etc.)
+2. Devise a method of pre-processing the data (cropped to certain resolution? Where etc.)
 3. Determine features for our machine learning model (what constitutes a "positive" detection.)
 4. Generate validation data.
 5. Train the model (TODO: determine technology; TensorFlow? Apple CreateML?)
 
 **Model Validation:**
-1. Use the model in Python to draw boxes around enemy player models.
-2. Streamy stream stream data time
-
-### Hardware Milestones (PL)
-
-Running HUDSON on the PL is the final stage of development and the output framerate and accuracy of the algorithm will determine its real-world viability.
-
-1. Repeat steps 2 - 4 from the PS design plan
-
-### On the Processor System (PS)
-
-Running HUDSON on the PS is a proof of concept that all algorithms are working properly. If so a baseline output framerate will be established to compare against the accelerated version of HUDSON running on the PL.
-
-1. Get comfortable with basic detection locally and on Pynqborad
-2. Test on individual images from the game as input JPEGs from memory
-3. Test on game clips (again input and output from memory)
-4. Move onto real time HDMI data buffered through memory
-
-### On the Programmable Logic (PL)
-
-Running HUDSON on the PL is the final stage of development and the output framerate and accuracy of the algorithm will determine its real-world viability.
-
-1. Repeat steps 2 - 4 from the PS design plan
+1. Test the model in Python on screenshots of gameplay unknown to the model.
+2. Use Python to draw boxes around enemy players on static images as detected by the ML model.
+3. Test the model on pre-recorded video and tweak until functioning as intended (dynamically).
 
 ## Work Distribution
 
