@@ -33,6 +33,7 @@ Running HUDSON on the PL is the final stage of development and the output framer
 **HDMI Overlay**
 1. Use the HDMI I/O to pass through a static image from a source to a monitor
 2. Use the HDMI I/O to pass through a video from a source to a monitor
+
     *NOTE: May run into HDCP issues. Be sure to test from multiple different HDMI sources (especially a game console) to ensure we can move onto next step)*
 
 **Accelerating the Algorithm**
