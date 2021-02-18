@@ -24,6 +24,7 @@ Utilize the  FPGA on the Xilinx Pynqboard to detect and draw a dynamic outline a
 1. Test the model in Python on screenshots of gameplay unknown to the model.
 2. Use Python to draw boxes around enemy players on static images as detected by the ML model.
 3. Test the model on pre-recorded video and tweak until functioning as intended (dynamically).
+4. Test the model on realtime HDMI input with live gameplay from Xbox. Note performance issues.
 
 ### Hardware Milestones (PL)
 
