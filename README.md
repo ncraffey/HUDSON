@@ -25,6 +25,18 @@ Utilize the  FPGA on the Xilinx Pynqboard to detect and draw a dynamic outline a
 2. Use Python to draw boxes around enemy players on static images as detected by the ML model.
 3. Test the model on pre-recorded video and tweak until functioning as intended (dynamically).
 
+### Hardware Milestones (PL)
+
+Running HUDSON on the PL is the final stage of development and the output framerate and accuracy of the algorithm will determine its real-world viability.
+
+**HDMI Overlay**
+1. Use the HDMI I/O to pass through a static image from a source to a monitor
+2. Use the HDMI I/O to pass through a video from a source to a monitor
+    *NOTE: May run into HDCP issues. Be sure to test from multiple different HDMI sources (especially a game console) to ensure we can move onto next step)*
+
+**Accelerating the Algorithm**
+1. Design custom HLS overlay to handle the image processing of each from the HDMI input buffer
+
 ## Work Distribution
 
 HUDSON is a group project between John Craffey and Nick Craffey. There are many milestones in the project that mostly need to happen sequentially. Because of this, we plan to work together on every step of the design as opposed to dividing up the work. At different stages, one of us may have more experience than the other, which will create a constant back and forth in the collaboration. We do not currently know everything we need to know in order to deploy a functional final product, but are confident based on some research that the concept is possible and within the limits of our skills as well as the performance of the Pynqboard.
