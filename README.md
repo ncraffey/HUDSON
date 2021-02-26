@@ -6,7 +6,7 @@ ___
 
 ## Abstract
 
-Utilize the  processor system combined with the programmable logic on the Xilinx Pynq board detect enemies in a video game, alerting the player to their presense (i.e. by drawing a box around them). Data will be input and output via the onboard HDMI I/O.
+Utilize the processing system in conjunction with the programmable logic on the Xilinx Pynq board to detect enemies in a video game (*Call of Duty*) and alerting the player to their presence by drawing a box around them. Data will be input and output via the onboard HDMI I/O.
 
 ___
 
@@ -16,37 +16,39 @@ ___
 
 - Pynq board HDMI input max 1080p60FPS
 - Pynq board HDMI output frame rate is TBD
-- IP will likely process a subsection of the HDMI signal at a time (200x200 squares, maybe in parallel, chip space permitting)
+- IP will likely process a subsection of the HDMI signal at a time (possibly in parallell; subdivide the screen into NxN squares of pixels for processing.)
 
 ### Algorithms (Still TBD based on experimentation)
 
-- Edge dectection (accelerated by PL)
-  - Determine sequence of kernels that can successfully outline players while exluding other in game artifacts
-- OpenCV?
-  -  pynq has an overlay supporting some openCV operations, may be depricated post Vivado 2018<sub>[5]<sub>
-  -  Preliminary experiments running OpenCV in python on pyqboard yield 0.3 FPS output
+- Edge dectection:
+  1. Blur/smooth the image to reduce noise
+  2. Convert to grayscale
+  3. Use known edge/contour detection algorithms in conjunction with some kind of segmentation (most likely color segmentation) in order to best determine where the target image is.
+  4. Overlay this hightight of the target image onto the original image.
+- OpenCV
+  -  pynq has an overlay supporting some openCV operations, may be deprecated post-Vivado 2018<sub>[5]<sub>
+  -  the most computationally expensive task is going to be edge detection, and the underlying math can most likely be hardware-accelerated. 
+  -  Preliminary experiments running OpenCV in python on pyqboard yield 0.3 FPS output......lots of room for improvement!
 ___
 
 ## Design Plan
 
 ### Work Distribution
 
-HUDSON is a group project between John Craffey and Nick Craffey. There are many milestones in the project that mostly need to happen sequentially. Because of this, we plan to work together on each step of the design as opposed to dividing up the work. At different stages, one of us may have more experience than the other, which will create a constant back and forth in the collaboration. We do not currently know everything we need to know in order to deploy a functional final product, but are confident based on some research that the concept is possible and within the limits of our skills.
+HUDSON is a group project between John Craffey and Nick Craffey (we're cousins.) A number of milesones in this project must happen sequentially (designing/testing the software, designing/testing hardware overlay), so we plan to work together on each step of the design as opposed to dividing up the work. At different stages, one of us may have more experience than the other, which will create a constant back and forth in the collaboration. Our skills are complementary in different niches of hardware and software. We do not currently know everything we need to know in order to deploy a functional final product, but are confident based on some research and early prototyping that the concept is possible and within the limits of our skills.
 
 ### Software Milestones (PS)
 
-- Data Collection
-  1. Determine the data we will use for training. This will most likely be a collection of in-game screenshots either showing enemy player models or "neutral" (no enemy).
-  2. Devise a method of pre-processing the data (cropped to certain resolution? Where etc.)
-  3. Determine features for our machine learning model (what constitutes a "positive" detection.)
-  4. Generate validation data.
-  5. Train the model (TODO: determine technology; TensorFlow? Apple CreateML?)
+So far we have enabled a test video stream to play via python, and we've set up the software infrastructure to draw a box on the image wherever we want, and have been using opencv to test out various prebuilt image processing approaches. So far, something like the following procedure looks promising:
 
-- Model Validation
-  1. Test the model in Python on screenshots of gameplay unknown to the model.
-  2. Use Python to draw boxes around enemy players on static images as detected by the ML model.
-  3. Test the model on pre-recorded video and tweak until functioning as intended (dynamically).
-  4. Test the model on realtime HDMI input with live gameplay from Xbox. Note performance issues.
+1. Store the current frame.
+2. Blur the frame to reduce noise.
+3. Convert the blurred frame to a different colorspace (black+white, or more intense)
+4. Use known algorithms (canny, contours) to detect edges.
+5. Iterate on this design so we are mostly finding *only* the edges we want
+6. Overlay these highlighted edges onto the originally stored frame.
+
+This method avoids using anything too out-of-scope (intensive AI modeling) but still a large amount of image processing. We are looking into which part of the above procedure is most ripe for acceleration, or even if multiple steps could be accelerated. We do not expect this to run smoothly purely in software, but it will be interesting to see just how low the performance is. We'll do everything we can to keep things as performant as possible before hardware acceleration, as responsivenss is key in our case (playing a game in real-time.)
 
 ### Hardware Milestones (PL)
 
@@ -71,7 +73,7 @@ Running HUDSON on the PL is the final stage of development and the output framer
     - Torn frames
     - Dropped player highlighting
 - Latency of the Pynq system could be too high to play game in real time
-	- Will need optimizations on the PL. Speed is more important than area 
+  - Will need optimizations on the PL. Speed is more important than area 
 
 ## Resources
 
