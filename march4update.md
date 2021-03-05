@@ -1,14 +1,13 @@
 # The HUDSON Project
 
 Nick Craffey & John Craffey
-
 ___
 
 ## March 4th Update & Initial Demo
 
-Since proposing the original project, we have started doing different experiments to get more comfortable with handling HDMI signals on the pynqboard as well as learn the image processing limitations of the processing system. We ran a few experiments to better understand which types of tasks take a long time to complete and therefore might benefit from hardware acceleration. We also learned which tasks execute quickly enough to possibly remain in software.
+Since proposing the original project, we have started to get more comfortable with handling HDMI signals on the pynqboard as well as learn the image processing limitations of the processing system. We ran a few experiments to better understand which types of tasks take a long time to complete and therefore might benefit from hardware acceleration. We also learned which tasks execute quickly enough to possibly remain in software.
 
-Overall the final design of the project is still up in the air, other than to say that we will be doing some kind of accelerated image processing on an HDMI input. Ideally we will still be detecting enemy players, but it is still unclear if the required processing can be done in the PL, and more experiments need to be done.
+Overall the final design of the project is still up in the air, other than to say that we will be doing some kind of accelerated image processing on an HDMI input. Ideally we will still be detecting enemy players, but it is still unclear if the required processing can be done in the PL, and more experiments need to be done. 
 
 ## Experiment Results
 
@@ -218,3 +217,11 @@ We timed each of the algorithm steps in 2 and 3 in order to find out which steps
 **Software Optimizations**
 
 By only running the heavy processing on every 5th frame, we were able to get the output framerate to about 30fps on these algorithms. While not processing every frame is not the ideal case, it shows a potential optimization if framerate becomes a constraint later on.
+
+**Looking Forward**
+
+Since we've set up the needed infrastructure on the PYNQ board to stream HDMI from an Xbox, to the PYNQ, to a TV, we were able to test latency of playing the game on this passthrough signal. With minimal processing we've found the game to be playable and believe with hardware acceleration the game will run very smoothly (at least 30FPS).
+
+In addition to the image processing techniques outlined above, we have toyed around with techniques like binary thresholding and color segmentation. Various prototypes of this design tested in-game show the user's own character, plus enemies, plus dark objects on the screen as black blobs. We believe this is a promising approach as the image processing is not-so computationally intensive and still allows us to extract rich information from each frame.
+
+Moving forward we hope to implement "instance segmentation" allowing us to always track *which blob is which*, which will allow us to ignore highlighting ourselves in-game! Additionally we are exploring known algorithms exploiting the delta between frames to track moving objects, thus allowing us to filter out stationary objects in the environment. Using these techniques as descrribed will provide an optimal mask for choosing where to draw boxes on our original frame from HDMI. The group looks forward to rapidly prototyping this phase until we have something we feel confident in, then will attempt to implement the most expensive operations in C for hardware acceleration.
