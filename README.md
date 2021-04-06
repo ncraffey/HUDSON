@@ -6,7 +6,7 @@ ___
 
 ## Abstract
 
-Utilize the processing system in conjunction with the programmable logic on the Xilinx Pynq board to detect enemies in a video game (*Call of Duty*) and alerting the player to their presence by drawing a box around them. Data will be input and output via the onboard HDMI I/O.
+Utilize the processing system in conjunction with the programmable logic on the Xilinx Pynq board to detect enemies in a video game (*Call of Duty*) and alert the player to their presence by drawing a box around them. Data will be input and output via the onboard HDMI I/O.
 
 ___
 
@@ -52,11 +52,13 @@ This method avoids using anything too out-of-scope (intensive AI modeling) but s
 
 ### Hardware Milestones (PL)
 
-Running HUDSON on the PL is the final stage of development and the output framerate and accuracy of the algorithm will determine its real-world viability.
+Running HUDSON on the PL is how we will accelerate certain image processing algorithms, and the output framerate and accuracy of the algorithm will determine its real-world viability.
 
 - HDMI Overlay<sub>[6]<sub>
   1. Use the HDMI I/O to pass through a static image from a source to a monitor
   2. Use the HDMI I/O to pass through a video from a source to a monitor
+  3. Strip the HDMI IP out of the base overlay to free space on the PL<sub>[7]</sub>
+
 
     *NOTE: May run into HDCP issues. Be sure to test from multiple different HDMI sources (especially a game console) to ensure we can move onto next step)*
 
@@ -64,7 +66,8 @@ Running HUDSON on the PL is the final stage of development and the output framer
   1. Design custom HLS overlay to handle the image processing of each from the HDMI input buffer
        - Implement the necesary operations for edge detection
        - Experiment with different optimizations
-  2. Allow PL to process smaller subsections of the input signal in parallel to reduce latency and increase frame throughput
+  2. Incorperate custom IP into striped down base overlay so we have a single overlay with just HDMI and custom IP capability 
+  3. Allow PL to process smaller subsections of the input signal in parallel to reduce latency and increase frame throughput
     
 ### Possible Limitations
 
@@ -75,16 +78,35 @@ Running HUDSON on the PL is the final stage of development and the output framer
 - Latency of the Pynq system could be too high to play game in real time
   - Will need optimizations on the PL. Speed is more important than area 
 
+### Results
+
+When looking at the preliminary redshift experiment, which changes all of the red values of all pixels in a frame to the max value of 255, we see the following results:
+
+Resolution: 1280x720
+
+Software: 0.0083 FPS
+
+Hardware: 0.96 FPS
+
+Speedup: 115x
+
+This incredibly high speedup is due to the nature of reading and modifying every single pixel value, of which there are 1280 * 720 * 3 values in total. This demonstrates the hardwares capacity to speed up operations that could otherwise be done in software, but it also shows that although the hardware is faster, it still will not be able to interpret an entire 1280x720 pixel image while maintaining playable framerates.
+
+
 ## Resources
 
 1. [Face detection in 2 minutes using OpenCV & Python](https://towardsdatascience.com/face-detection-in-2-minutes-using-opencv-python-90f89d7c0f81)
 
 2. [Video demonstrating viability of player model detection in Call of DuTy: Modern Warfare](https://www.youtube.com/watch?v=Qif8g2Ib5pI)
 
-3. [GitHub Repo for above video (code and Data)](https://github.com/darkmatter2222/COD-MW-2019-DNN)
+3. [GitHub Repo for above video<sub>[2]</sub> (code and Data)](https://github.com/darkmatter2222/COD-MW-2019-DNN)
 
 4. [Use Python, Pynq and OpenCV to Implement Computer Vision](https://www.hackster.io/adam-taylor/use-python-Pynq-and-opencv-to-implement-computer-vision-361e1b)
 
 5. [PYNQ Computer Vision Github](https://github.com/Xilinx/PYNQ-ComputerVision)
 
 6. [PYNQ HDMI intro](https://github.com/Xilinx/PYNQ/blob/master/boards/Pynq-Z1/base/notebooks/video/hdmi_introduction.ipynb)
+
+7. [Adding IP to a PYNQ overlay (From Base Overlay)](https://www.youtube.com/watch?v=LomArt-hi4M)
+
+8. [Processing Axi Stream Data in HLS](https://forums.xilinx.com/t5/High-Level-Synthesis-HLS/AXI-STREAM-Interface-Help/td-p/758180)
