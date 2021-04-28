@@ -17,6 +17,8 @@
 
 #include "xf_threshold_config.h"
 #include "ap_int.h"
+#include "imgproc/xf_duplicateimage.hpp"
+#include "imgproc/xf_gaussian_filter.hpp"
 
 
 // struct added by John Craffey for HUDSON project
@@ -79,39 +81,39 @@ void findBody(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& img,
 				ap_uint<12>& xx,
 				ap_uint<12>& yy) {
 
-	xx = 69;
-	yy = 69;
-
+	xx = 400;
+	yy = 400;
 	int idx = 0;
-	for ( xx = 0; xx < rows; xx += 1 ) {
-		for ( yy = 0; yy < cols; yy += 1) {
-			// clang-format off
-		   	#pragma HLS loop_flatten off
-		   	#pragma HLS pipeline II=1
-			// clang-format on
-			if (img.read(idx++)) {
-				xx += 1;
-				yy += 1;
-				break;
-			}
-		}
-	}
 
+			for (int i = 0; i < rows; i++) {
+				for (int j = 0; j < cols; j++) {
+					// clang-format off
+		    		#pragma HLS loop_flatten off
+		    		#pragma HLS pipeline II=1
+					// clang-format on
+					img.read(idx++);
+				}
+			}
+
+	return;
 }
 
 // top function based from https://github.com/Xilinx/Vitis_Libraries/blob/master/vision/L1/examples/threshold/xf_threshold_accel.cpp
 // ===== EntryPoint =====
 void threshold_accel(axis_t* srcPtr,
+					 axis_t* dstPtr,
                      unsigned char thresh,
                      unsigned char maxval,
                      int rows,
                      int cols,
 					 ap_uint<12>& xOut,
-					 ap_uint<12>& yOut) {
+					 ap_uint<12>& yOut,
+					 float sigma) {
 // clang-format off
 	// taken from redshift
 #pragma HLS INTERFACE ap_ctrl_none port=return
 #pragma HLS INTERFACE axis register both port=srcPtr
+#pragma HLS INTERFACE axis register both port=dstPtr
 
 #pragma HLS INTERFACE s_axilite register port=thresh
 #pragma HLS INTERFACE s_axilite register port=maxval
@@ -119,34 +121,34 @@ void threshold_accel(axis_t* srcPtr,
 #pragma HLS INTERFACE s_axilite register port=cols
 #pragma HLS INTERFACE s_axilite register port=xOut
 #pragma HLS INTERFACE s_axilite register port=yOut
-
-    // clang-format on
+#pragma HLS INTERFACE s_axilite register port=sigma
+// clang-format on
 
     const int pROWS = HEIGHT;
     const int pCOLS = WIDTH;
     const int pNPC1 = NPIX;
 
     xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX> in_mat(rows, cols);
-    // clang-format off
-    // clang-format on
-
+    xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX> out_of_thresh_mat(rows, cols);
+    xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX> out_of_gauss_mat(rows, cols);
+    xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX> in_findbody_mat(rows, cols);
     xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX> out_mat(rows, cols);
-// clang-format off
-// clang-format on
 
 // clang-format off
     #pragma HLS DATAFLOW
-    // clang-format on
+// clang-format on
 
     // read in the axi stream
     axis2xfMat(srcPtr,in_mat, rows, cols);
-
     // threshold the image
-    xf::cv::Threshold<THRESH_TYPE, XF_8UC1, HEIGHT, WIDTH, NPIX>(in_mat, out_mat, thresh, maxval);
+    xf::cv::GaussianBlur<5, XF_BORDER_CONSTANT, XF_8UC1, HEIGHT, WIDTH, NPIX>(in_mat, out_of_gauss_mat, sigma);
+    xf::cv::Threshold<THRESH_TYPE, XF_8UC1, HEIGHT, WIDTH, NPIX>(out_of_gauss_mat, out_of_thresh_mat, thresh, maxval);
 
-    findBody(out_mat, rows, cols, xOut, yOut);
-
-    // write the processed image to axi stream output
-//    xfMat2axis(out_mat, dstPtr, rows, cols);
+    // copy processed image so we dont lose it
+    xf::cv::duplicateMat<XF_8UC1, HEIGHT, WIDTH, NPIX>(out_of_thresh_mat,  out_mat, in_findbody_mat);
+    // find coordinates for rectangle
+    findBody(in_findbody_mat, rows, cols, xOut, yOut);
+    // write the processed image from out_mat to axi stream output
+    xfMat2axis(out_mat, dstPtr, rows, cols);
 
 }
