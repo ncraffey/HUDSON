@@ -18,7 +18,6 @@
 #include "xf_threshold_config.h"
 #include "ap_int.h"
 #include "imgproc/xf_duplicateimage.hpp"
-#include "imgproc/xf_gaussian_filter.hpp"
 
 
 // struct added by John Craffey for HUDSON project
@@ -107,8 +106,7 @@ void threshold_accel(axis_t* srcPtr,
                      int rows,
                      int cols,
 					 ap_uint<12>& xOut,
-					 ap_uint<12>& yOut,
-					 float sigma) {
+					 ap_uint<12>& yOut) {
 // clang-format off
 	// taken from redshift
 #pragma HLS INTERFACE ap_ctrl_none port=return
@@ -121,7 +119,6 @@ void threshold_accel(axis_t* srcPtr,
 #pragma HLS INTERFACE s_axilite register port=cols
 #pragma HLS INTERFACE s_axilite register port=xOut
 #pragma HLS INTERFACE s_axilite register port=yOut
-#pragma HLS INTERFACE s_axilite register port=sigma
 // clang-format on
 
     const int pROWS = HEIGHT;
@@ -130,7 +127,6 @@ void threshold_accel(axis_t* srcPtr,
 
     xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX> in_mat(rows, cols);
     xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX> out_of_thresh_mat(rows, cols);
-    xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX> out_of_gauss_mat(rows, cols);
     xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX> in_findbody_mat(rows, cols);
     xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX> out_mat(rows, cols);
 
@@ -141,8 +137,7 @@ void threshold_accel(axis_t* srcPtr,
     // read in the axi stream
     axis2xfMat(srcPtr,in_mat, rows, cols);
     // threshold the image
-    xf::cv::GaussianBlur<5, XF_BORDER_CONSTANT, XF_8UC1, HEIGHT, WIDTH, NPIX>(in_mat, out_of_gauss_mat, sigma);
-    xf::cv::Threshold<THRESH_TYPE, XF_8UC1, HEIGHT, WIDTH, NPIX>(out_of_gauss_mat, out_of_thresh_mat, thresh, maxval);
+    xf::cv::Threshold<THRESH_TYPE, XF_8UC1, HEIGHT, WIDTH, NPIX>(in_mat, out_of_thresh_mat, thresh, maxval);
 
     // copy processed image so we dont lose it
     xf::cv::duplicateMat<XF_8UC1, HEIGHT, WIDTH, NPIX>(out_of_thresh_mat,  out_mat, in_findbody_mat);
